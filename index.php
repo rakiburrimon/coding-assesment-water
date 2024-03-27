@@ -17,6 +17,9 @@
         <label for="flowRate">Enter the flow rate(s) per tap (separated by spaces, e.g., "100 150 200"):</label><br>
         <input type="text" id="flowRate" name="flowRate" required value="<?php echo isset($_POST['flowRate']) ? htmlspecialchars($_POST['flowRate']) : ''; ?>"><br><br>
         
+        <label for="walkingTime">Time to walk to tap (in seconds):</label><br>
+        <input type="number" id="walkingTime" name="walkingTime" required value="<?php echo isset($_POST['walkingTime']) ? htmlspecialchars($_POST['walkingTime']) : ''; ?>"><br><br>
+        
         <input type="submit" value="Calculate">
     </form>
     <br>
@@ -27,12 +30,13 @@
             $queue = isset($_POST['queue']) ? explode(' ', $_POST['queue']) : [];
             $taps = isset($_POST['taps']) ? (int)$_POST['taps'] : 0;
             $flowRates = isset($_POST['flowRate']) ? explode(' ', $_POST['flowRate']) : [];
+            $walkingTime = isset($_POST['walkingTime']) ? (int)$_POST['walkingTime'] : 0;
 
             // Validate the inputs
-            validateInputs($queue, $taps, $flowRates);
+            validateInputs($queue, $taps, $flowRates, $walkingTime);
 
             // Calculate the total time required
-            $totalTime = calculateTotalTime($queue, $taps, $flowRates);
+            $totalTime = calculateTotalTime($queue, $taps, $flowRates, $walkingTime);
 
             // Display the result
             echo "<strong>Total time required:</strong> $totalTime seconds";
@@ -42,7 +46,7 @@
         }
     }
 
-    function validateInputs(array $queue, int $taps, array $flowRates): void {
+    function validateInputs(array $queue, int $taps, array $flowRates, int $walkingTime): void {
         // Validate the queue
         if (empty($queue)) {
             throw new InvalidArgumentException('Queue is empty.');
@@ -68,14 +72,19 @@
             }
         }
         // Check if a single flow rate is provided
-        if (count($flowRates) === 1 && $flowRates[0] != 1) {
-            throw new InvalidArgumentException('Flow rate must be 1 if a single value is provided.');
+        if (count($flowRates) === 1 && empty($flowRates[0])) {
+            throw new InvalidArgumentException('Flow rate must be required if a single value is provided.');
         } elseif (count($flowRates) != 1 && count($flowRates) != $taps) {
             throw new InvalidArgumentException('Number of flow rates must be 1 or equal to the number of taps.');
         }
+
+        // Validate walking time
+        if ($walkingTime < 0) {
+            throw new InvalidArgumentException('Walking time must be a non-negative integer.');
+        }
     }
 
-    function calculateTotalTime(array $queue, int $taps, array $flowRates): int {
+    function calculateTotalTime(array $queue, int $taps, array $flowRates, int $walkingTime): int {
         // Check if a single flow rate is provided
         if (count($flowRates) === 1) {
             $flowRate = (int)$flowRates[0];
@@ -89,8 +98,10 @@
         // Calculate the time required for each person in the queue and sum them up
         $totalTime = 0;
         foreach ($queue as $bottleSize) {
-            $time = ceil($bottleSize / $totalFlowRate);
-            $totalTime += $time;
+            // Calculate time to fill the bottle
+            $fillTime = ceil($bottleSize / $totalFlowRate);
+            // Add walking time
+            $totalTime += $fillTime + $walkingTime;
         }
         return $totalTime;
     }
