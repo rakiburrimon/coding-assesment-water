@@ -28,9 +28,7 @@
         $flowRates = isset($_POST['flowRate']) ? explode(' ', $_POST['flowRate']) : [];
 
         // Validate the flow rates based on the number of taps
-        if (count($flowRates) === 1 && $flowRates[0] != 1) {
-            echo "<p style='color: red;'>Flow rate must be 1 if a single value is provided.</p>";
-        } elseif (count($flowRates) != 1 && count($flowRates) != $taps) {
+        if (count($flowRates) != 1 && count($flowRates) != $taps) {
             echo "<p style='color: red;'>Number of flow rates must be 1 or equal to the number of taps.</p>";
         } else {
             // Calculate the total time required
