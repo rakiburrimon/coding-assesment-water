@@ -37,7 +37,10 @@
             $totalTime = calculateTotalTime($queue, $taps, $flowRates);
 
             // Display the result
-            echo "<strong>Total time required:</strong> $totalTime seconds";
+            echo "<strong>Total time required:</strong> $totalTime seconds<br>";
+            echo "Queue of people: " . implode(' ', $queue) . "<br>";
+            echo "Number of taps: $taps<br>";
+            echo "Flow rate(s) per tap: " . implode(' ', $flowRates);
         }
     }
 
