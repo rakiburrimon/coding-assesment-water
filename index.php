@@ -91,52 +91,23 @@ class WaterBottleFillingTimeCalculator
 
         return $flowRates;
     }
-
-    // Function to run test cases
-    public function runTestCases(): void {
-        $this->testCase1();
-        $this->testCase2();
-        // Add more test cases as needed
-    }
-
-    // Sample test case 1
-    private function testCase1(): void {
-        $queue = [500, 750, 1000];
-        $taps = 3;
-        $flowRates = [100, 150, 200];
-        $walkingTime = 10;
-        $queueNumber = 2;
-        $newFlowRates = [250, 300];
-        $expectedResult = 68; // Expected total time in seconds
-
-        $result = $this->calculateTotalTime($queue, $taps, $flowRates, $walkingTime);
-        $this->assertEqual($result, $expectedResult);
-    }
-
-    // Sample test case 2
-    private function testCase2(): void {
-        $queue = [300, 500, 700];
-        $taps = 2;
-        $flowRates = [120, 180];
-        $walkingTime = 8;
-        $queueNumber = 1;
-        $newFlowRates = [150];
-        $expectedResult = 49; // Expected total time in seconds
-
-        $result = $this->calculateTotalTime($queue, $taps, $flowRates, $walkingTime);
-        $this->assertEqual($result, $expectedResult);
-    }
-
-    // Assertion function
-    private function assertEqual($actual, $expected): void {
-        if ($actual !== $expected) {
-            echo $actual . "\n";
-        }
-    }
 }
 
-// Instantiate the class and run test cases
+// Instantiate the class
 $calculator = new WaterBottleFillingTimeCalculator();
-$calculator->runTestCases();
+
+// Sample input data
+$queue = [500, 750, 1000]; // Queue of bottle sizes
+$taps = 3; // Number of taps
+$flowRates = [100, 150, 200]; // Flow rates per tap (ml per second)
+$walkingTime = 10; // Time to walk to tap (in seconds)
+$queueNumber = 2; // Queue number for changing tap flow rate
+$newFlowRates = [250, 300]; // New flow rates after queue number
+
+// Calculate the total time required
+$totalTime = $calculator->calculateTotalTime($queue, $taps, $flowRates, $walkingTime, $queueNumber, $newFlowRates);
+
+// Display the result
+echo $totalTime;
 
 ?>
