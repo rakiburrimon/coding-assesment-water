@@ -1,65 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Bottle Filling Time Calculator</title>
-</head>
-<body>
-    <h2>Water Bottle Filling Time Calculator</h2>
-    <form method="post">
-        <label for="queue">Enter the queue of people (sizes separated by spaces):</label><br>
-        <input type="text" id="queue" name="queue" required value="<?php echo isset($_POST['queue']) ? htmlspecialchars($_POST['queue']) : ''; ?>"><br><br>
-        
-        <label for="taps">Enter the number of taps:</label><br>
-        <input type="number" id="taps" name="taps" required value="<?php echo isset($_POST['taps']) ? htmlspecialchars($_POST['taps']) : ''; ?>"><br><br>
+<?php
 
-        <label for="flowRate">Enter the flow rate(s) per tap (separated by spaces, e.g., "100 150 200"):</label><br>
-        <input type="text" id="flowRate" name="flowRate" required value="<?php echo isset($_POST['flowRate']) ? htmlspecialchars($_POST['flowRate']) : ''; ?>"><br><br>
-
-        <label for="walkingTime">Time to walk to tap (in seconds):</label><br>
-        <input type="number" id="walkingTime" name="walkingTime" required value="<?php echo isset($_POST['walkingTime']) ? htmlspecialchars($_POST['walkingTime']) : ''; ?>"><br><br>
-
-        <label for="queueNumber">Queue number for changing tap flow rate:</label><br>
-        <input type="number" id="queueNumber" name="queueNumber" value="<?php echo isset($_POST['queueNumber']) ? htmlspecialchars($_POST['queueNumber']) : ''; ?>"><br><br>
-
-        <label for="newFlowRate">New flow rate(s) after queue number (separated by spaces, e.g., "200 250 300"):</label><br>
-        <input type="text" id="newFlowRate" name="newFlowRate" value="<?php echo isset($_POST['newFlowRate']) ? htmlspecialchars($_POST['newFlowRate']) : ''; ?>"><br><br>
-        
-        <input type="submit" value="Calculate">
-    </form>
-    <br>
-    <?php
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        try {
-            // Process the form data
-            $queue = isset($_POST['queue']) ? explode(' ', $_POST['queue']) : [];
-            $taps = isset($_POST['taps']) ? (int)$_POST['taps'] : 0;
-            $flowRates = isset($_POST['flowRate']) ? explode(' ', $_POST['flowRate']) : [];
-            $walkingTime = isset($_POST['walkingTime']) ? (int)$_POST['walkingTime'] : 0;
-            $queueNumber = isset($_POST['queueNumber']) ? (int)$_POST['queueNumber'] : count($queue);
-            $newFlowRates = isset($_POST['newFlowRate']) ? explode(' ', $_POST['newFlowRate']) : [];
-
-            // Validate the inputs
-            validateInputs($queue, $taps, $flowRates, $walkingTime, $queueNumber, $newFlowRates);
-
-            // Adjust flow rates after the specified queue number
-            if ($queueNumber > 0 && !empty($newFlowRates)) {
-                $flowRates = adjustFlowRates($queue, $queueNumber, $newFlowRates, $flowRates);
-            }
-
-            // Calculate the total time required
-            $totalTime = calculateTotalTime($queue, $taps, $flowRates, $walkingTime);
-
-            // Display the result
-            echo "<strong>Total time required:</strong> $totalTime seconds";
-        } catch (InvalidArgumentException $e) {
-            // Catch and display any exceptions thrown
-            echo "<p style='color: red;'>Error: " . $e->getMessage() . "</p>";
+class WaterBottleFillingTimeCalculator
+{
+    // Function to calculate the total time required to fill all bottles
+    public function calculateTotalTime(array $queue, int $taps, array $flowRates, int $walkingTime): int {
+        // Check if a single flow rate is provided
+        if (count($flowRates) === 1) {
+            $flowRate = (int)$flowRates[0];
+            // Calculate the total flow rate of all taps combined
+            $totalFlowRate = $taps * $flowRate; // ml per second
+        } else {
+            // Calculate the total flow rate of all taps combined
+            $totalFlowRate = array_sum($flowRates); // ml per second
         }
+
+        // Calculate the time required for each person in the queue and sum them up
+        $totalTime = 0;
+        foreach ($queue as $bottleSize) {
+            // Calculate the time to fill the bottle
+            $fillTime = ceil($bottleSize / $totalFlowRate);
+
+            // Add walking time if applicable
+            $totalTime += $fillTime + $walkingTime;
+        }
+        return $totalTime;
     }
 
-    function validateInputs(array $queue, int $taps, array $flowRates, int $walkingTime, int $queueNumber, array $newFlowRates): void {
+    // Function to validate inputs
+    public function validateInputs(array $queue, int $taps, array $flowRates, int $walkingTime, int $queueNumber, array $newFlowRates): void {
         // Validate the queue
         if (empty($queue)) {
             throw new InvalidArgumentException('Queue is empty.');
@@ -109,7 +77,8 @@
         }
     }
 
-    function adjustFlowRates(array $queue, int $queueNumber, array $newFlowRates, array $flowRates): array {
+    // Function to adjust flow rates after the specified queue number
+    public function adjustFlowRates(array $queue, int $queueNumber, array $newFlowRates, array $flowRates): array {
         // If the queue number is greater than the queue length, do not adjust flow rates
         if ($queueNumber >= count($queue)) {
             return $flowRates;
@@ -123,28 +92,51 @@
         return $flowRates;
     }
 
-    function calculateTotalTime(array $queue, int $taps, array $flowRates, int $walkingTime): int {
-        // Check if a single flow rate is provided
-        if (count($flowRates) === 1) {
-            $flowRate = (int)$flowRates[0];
-            // Calculate the total flow rate of all taps combined
-            $totalFlowRate = $taps * $flowRate; // ml per second
-        } else {
-            // Calculate the total flow rate of all taps combined
-            $totalFlowRate = array_sum($flowRates); // ml per second
-        }
-
-        // Calculate the time required for each person in the queue and sum them up
-        $totalTime = 0;
-        foreach ($queue as $bottleSize) {
-            // Calculate the time to fill the bottle
-            $fillTime = ceil($bottleSize / $totalFlowRate);
-
-            // Add walking time if applicable
-            $totalTime += $fillTime + $walkingTime;
-        }
-        return $totalTime;
+    // Function to run test cases
+    public function runTestCases(): void {
+        $this->testCase1();
+        $this->testCase2();
+        // Add more test cases as needed
     }
-    ?>
-</body>
-</html>
+
+    // Sample test case 1
+    private function testCase1(): void {
+        $queue = [500, 750, 1000];
+        $taps = 3;
+        $flowRates = [100, 150, 200];
+        $walkingTime = 10;
+        $queueNumber = 2;
+        $newFlowRates = [250, 300];
+        $expectedResult = 68; // Expected total time in seconds
+
+        $result = $this->calculateTotalTime($queue, $taps, $flowRates, $walkingTime);
+        $this->assertEqual($result, $expectedResult);
+    }
+
+    // Sample test case 2
+    private function testCase2(): void {
+        $queue = [300, 500, 700];
+        $taps = 2;
+        $flowRates = [120, 180];
+        $walkingTime = 8;
+        $queueNumber = 1;
+        $newFlowRates = [150];
+        $expectedResult = 49; // Expected total time in seconds
+
+        $result = $this->calculateTotalTime($queue, $taps, $flowRates, $walkingTime);
+        $this->assertEqual($result, $expectedResult);
+    }
+
+    // Assertion function
+    private function assertEqual($actual, $expected): void {
+        if ($actual !== $expected) {
+            echo $actual . "\n";
+        }
+    }
+}
+
+// Instantiate the class and run test cases
+$calculator = new WaterBottleFillingTimeCalculator();
+$calculator->runTestCases();
+
+?>
